@@ -1,4 +1,3 @@
-%%cuda
 
 #include<iostream>
 
@@ -11,20 +10,20 @@ void matrixMultiplicationKernel(float *m, float *n, float *p, int i, int j, int 
     if(row < i && col < k) {
         int pValue = 0;
         for(int idx = 0; idx < j; idx++) {
-            pValue += m[row * i + idx] * n[idx * i + col];
+            pValue += m[row * j + idx] * n[idx * k + col];
         }
 
-        p[row * i + col] = pValue;
+        p[row * k + col] = pValue;
     }
 
 }
 
 int main() {
 
-    int i = 2, j = 2, k = 2;
-    float m[4] = {1,2,3,4};
-    float n[4] = {5,6,7,8};
-    float p[4] = {};
+    int i = 4, j = 6, k = 3;
+    float m[24] = {4,5,7,7,6,4,2,1,0,8,7,6,5,6,8,9,0,6,5,7,1,2,1,4};
+    float n[18] = {2,2,3,4,7,8,6,8,5,9,6,7,5,4,7,9,5,3};
+    float p[12] = {};
 
     float *m_d, *n_d, *p_d;
 
@@ -39,7 +38,7 @@ int main() {
     cudaMemcpy(m_d, m, i*j*sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(n_d, n, j*k*sizeof(float), cudaMemcpyHostToDevice);
     
-    dim3 dimGrid = {ceil(k/16.0), ceil(i/16.0)};
+    dim3 dimGrid = {static_cast<unsigned int>(ceil(k/16.0)), static_cast<unsigned int>(ceil(i/16.0))};
     dim3 dimBlock = {16, 16};
 
     matrixMultiplicationKernel<<<dimGrid, dimBlock>>>(m_d, n_d, p_d, i, j, k);
@@ -50,7 +49,7 @@ int main() {
     cudaFree(n_d);
     cudaFree(p_d);
     
-    for(int idx = 0; idx < 4; idx++) {
+    for(int idx = 0; idx < 12; idx++) {
         std::cout << p[idx] << " ";
     }
 
